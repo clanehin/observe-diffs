@@ -1,8 +1,9 @@
 observe-diffs: Observe shallow differences between successive plain JavaScript objects.
 =======================================================================================
 
-Produces a function which can be called multiple times. For each shallow key in the parameter,
-if that key changes between successive calls, certain events will fire.
+Produces a function which can be called multiple times with a parameter that
+may change between successive calls. For each shallow key in the parameter, if
+that key changes between successive calls, certain events will fire.
 
 Motivation
 ----------
@@ -16,18 +17,16 @@ Events
 
 ### raised
 
-A raised even first whenever a previously undefined field appears in the result
-object.
+A raised even first whenever a previously non-existant key appears.
 
 ### updated
 
-An updated event fires whenever a field is not reference-identical to it's
-previous value (including when it is raised, but not when it is dropped).
+An updated event fires whenever a value changes according to Object.is. This
+includes immediately after the key is raised, but not when it is dropped.
 
 ### dropped
 
-A dropped event fires whenever a field is no longer defined in the result
-object.
+A dropped event fires whenever a previously extant key is no longer found.
 
 Usage
 -----
