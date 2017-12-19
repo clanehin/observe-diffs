@@ -1,0 +1,16 @@
+{
+  "name": "observe-diffs",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "test": "eslint src/**.js spec/**.js && jasmine",
+    "clean": "rm -rf ./node_modules"
+  },
+  "author": "Christopher Lane Hinson <clanehin@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^4.13.0",
+    "eslint-plugin-promise": "^3.6.0",
+    "jasmine": "^2.8.0"
+  }
+}
