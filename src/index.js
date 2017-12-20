@@ -1,4 +1,5 @@
 module.exports = function(listeners) {
+  let serial = Promise.resolve();
   const state = {};
   const outs = {};
 
@@ -8,7 +9,7 @@ module.exports = function(listeners) {
     dropped: async (_key, _prev, _next, _out) => undefined
   }, listeners);
 
-  return async function update(input) {
+  const update = async function(input) {
     const ins = await input;
     const join = [];
 
@@ -39,6 +40,11 @@ module.exports = function(listeners) {
     await Promise.all(join);
 
     return outs;
+  };
+
+  return function() {
+    serial = serial.then(() => update.apply(this,arguments));
+    return serial;
   };
 };
 
