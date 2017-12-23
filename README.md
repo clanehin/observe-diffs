@@ -17,7 +17,7 @@ Events
 
 ### raised
 
-A raised even first whenever a previously non-existant key appears.
+A raised event fires whenever a previously non-existant key appears.
 
 ### updated
 
