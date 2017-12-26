@@ -49,15 +49,52 @@ describe('observeDiffs', function() {
 
     expect(count).toBe(0);
     await f({ foo: 'bar' });
-    expect(count).toBe(1);
+    expect(count).toBe(0);
     await f({ foo: 'baz' });
-    expect(count).toBe(2);
+    expect(count).toBe(1);
     await f({});
+    expect(count).toBe(1);
+    done();
+  });
+
+  it('listeners.changed() provides the key, before, after, and previous out values', async function(done) {
+    let count = 0;
+
+    const f = observeDiffs({
+      raised: (key, prev, next, out) => {
+        expect(key).toBe('foo');
+        expect(prev).not.toBeDefined();
+        expect(next).toBe(0);
+        expect(out).not.toBeDefined();
+        return 0;
+      },
+      changed: (key, prev, next, out) => {
+        expect(key).toBe('foo');
+        expect(prev).toBe(next - 1);
+        expect(next).toBe(prev + 1);
+        expect(out).toBe(prev * 42);
+        count++;
+        return next*42;
+      },
+      dropped: (key,prev,next,out) => {
+        expect(key).toBe('foo');
+        expect(prev).toBe(2);
+        expect(next).not.toBeDefined();
+        expect(out).toBe(48);
+      }
+    });
+
+    expect(count).toBe(0);
+    await f({ foo: 0 });
+    expect(count).toBe(0);
+    await f({ foo: 1 });
+    expect(count).toBe(1);
+    await f({ foo: 2 });
     expect(count).toBe(2);
     done();
   });
 
-  it('listeners object is available to listeners', async function(done) {
+  it('listeners fields are available to listeners', async function(done) {
     let count = 0;
 
     const listeners = {
@@ -81,11 +118,11 @@ describe('observeDiffs', function() {
 
     expect(count).toBe(0);
     await f({ foo: 'bar' });
-    expect(count).toBe(2);
+    expect(count).toBe(1);
     await f({ foo: 'baz' });
-    expect(count).toBe(3);
+    expect(count).toBe(2);
     await f({ quuz: 17 });
-    expect(count).toBe(6);
+    expect(count).toBe(4);
     done();
   });
 
@@ -102,22 +139,22 @@ describe('observeDiffs', function() {
         return o+1;
       },
       dropped: (_k,_v,_n,o) => {
-        expect(o).toBe(13);
+        expect(o).toBe(12);
         drops++;
       }
     });
 
-    expect(await f({ foo: 'bar' })).toEqual({ foo: 11 });
-    expect(await f({ foo: 'baz' })).toEqual({ foo: 12 });
-    expect(await f({ foo: 'baz', quux: 17 })).toEqual({ foo: 12, quux: 11 });
-    expect(await f({ foo: 'bar', quux: 19 })).toEqual({ foo: 13, quux: 12 });
-    expect(await f({ quux: 21 })).toEqual({ quux: 13 });
+    expect(await f({ foo: 'bar' })).toEqual({ foo: 10 });
+    expect(await f({ foo: 'baz' })).toEqual({ foo: 11 });
+    expect(await f({ foo: 'baz', quux: 17 })).toEqual({ foo: 11, quux: 10 });
+    expect(await f({ foo: 'bar', quux: 19 })).toEqual({ foo: 12, quux: 11 });
+    expect(await f({ quux: 21 })).toEqual({ quux: 12 });
     expect(await f({})).toEqual({});
     expect(drops).toBe(2);
     done();
   });
 
-  it('can runs in predictable order', async function(done) {
+  it('runs in predictable order', async function(done) {
     const events = [];
 
     const f = observeDiffs({
@@ -136,11 +173,24 @@ describe('observeDiffs', function() {
       f({ bar: 2, quux: 9 })]);
 
     expect(events).toEqual([
-      'raised foo', 'changed foo',
-      'raised bar', 'changed bar',
+      'raised foo',
+      'raised bar',
       'dropped foo',
       'changed bar',
-      'raised quux', 'changed quux']);
+      'raised quux',]);
+    done();
+  });
+
+  it('correctly executes the README example', async function(done) {
+    const f = observeDiffs({ changed: (_key,prev,next) => {
+      return next - prev;
+    }});
+
+    expect(await f({ foo: 0 })).toEqual({});
+    expect(await f({ foo: 1,  bar: 10 })).toEqual({ foo: 1 });
+    expect(await f({ foo: -1, bar: 20 })).toEqual({ foo: -2, bar: 10 });
+    expect(await f({ foo: 0,  bar: 10 })).toEqual({ foo: 1, bar: -10 });
+    expect(await f({ foo: 0 })).toEqual({ foo: 1 });
     done();
   });
 });

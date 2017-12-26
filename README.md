@@ -2,38 +2,48 @@ observe-diffs: Observe shallow differences between successive plain JavaScript o
 =======================================================================================
 
 Produces a function which can be called multiple times with a parameter that
-may change between successive calls. For each shallow key in the parameter, if
+may change between successive calls. For each shallow own key in the parameter, if
 that key changes between successive calls, certain events will fire.
 
 Motivation
 ----------
 
-Observe-diffs facilitates conforming some instanced mutable data with a source
-of pure immutable data. Only values that change need to be updated. React, for
-example, does this with the DOM, but this function is more general purpose.
+Observe-diffs makes it possible to create stateful, mutable representations of
+a stream of immutable data points. Only values that change need to be updated.
+Values can appear or disappear from the input stream at any time.
 
-Events
-------
+Observe-diffs facilitates solutions to some of the same problems that an
+function reactive programming solution would solve. For example, you might use
+observe-diffs to implement integral, derivative, or edge detection on a stream
+of incoming values.
+
+Parameters
+----------
 
 ### raised
 
-A raised event fires whenever a previously non-existant key appears.
+A raised event fires whenever a previously non-existant key appears in the
+input.
 
 ### updated
 
-An updated event fires whenever a value changes according to Object.is. This
-includes immediately after the key is raised, but not when it is dropped.
+An updated event fires whenever a previously existing value changes. Values are
+tested via the edge method, by default, Object.is().
 
 ### dropped
 
-A dropped event fires whenever a previously extant key is no longer found.
+A dropped event fires whenever a previously extant key is no longer present in
+the input.
+
+### edge
+
+Tests whether or not two values are considered equal. By default, this is equivalent
+to Object.is().
 
 Usage
 -----
 
-	const observeDiffs = require('observe-diffs');
-
-observeDiffs({ raised, updated, dropped }) : function(object) : object
+observeDiffs({ raised, updated, dropped, egde ... }) : function(object) : object
 ------------------------------------------------------------------------
 
 Returns a function that observes diffs between successive calls. Diffs are
