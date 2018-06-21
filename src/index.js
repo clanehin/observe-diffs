@@ -7,7 +7,9 @@ module.exports = function(params) {
     raised: async (_key, _prev, _next, _out) => undefined,
     changed: async (_key, _prev, _next, _out) => undefined,
     dropped: async (_key, _prev, _next, _out) => undefined,
-    edge: async (a, b) => !Object.is(a,b)
+    edge: async (a, b) => !Object.is(a,b),
+    keys: async (o) => Object.keys(o),
+    concurrency: Infinity,
   }, params);
 
   const update = async function(input) {
@@ -15,8 +17,8 @@ module.exports = function(params) {
     const join = [];
 
     // handle new and existing inputs
-    for( const k of Object.keys(ins) ) {
-      start(join, async () => {
+    for( const k of await params.keys(ins) ) {
+      await start(params.concurrency, join, async () => {
         let out = undefined;
 
         if( !(k in state) )
@@ -36,7 +38,7 @@ module.exports = function(params) {
     // handle dropped inputs
     for( const k in state ) {
       if( !(k in ins) ) {
-        start(join, async () => {
+        await start(params.concurrency, join, async () => {
           await params.dropped(k, state[k], undefined, outs[k]);
           delete state[k];
           delete outs[k];
@@ -55,7 +57,12 @@ module.exports = function(params) {
   };
 };
 
-function start(list, fn) {
+async function start(concurrency, list, fn) {
   list.push(Promise.resolve(fn()));
+
+  if( list.length > concurrency ) {
+    await Promise.all(list);
+    list.length = 0;
+  }
 }
 
