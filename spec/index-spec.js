@@ -181,6 +181,39 @@ describe('observeDiffs', function() {
     done();
   });
 
+  it('runs in predictable order with key sort and disabled concurrency', async function(done) {
+    const events = [];
+
+    const f = observeDiffs({
+      raised: async (k) => events.push('raised ' + k),
+      changed: async (k) => events.push('changed ' + k),
+      dropped: async (k) => events.push('dropped ' + k),
+      keys: o => {
+        const result = Object.keys(o);
+        result.sort();
+        return result;
+      },
+      concurrency: 1
+    });
+
+    //note: this works because we've forced the program to run in
+    // single-concurrency mode and sorted the keys
+    await Promise.all([
+      f({ foo: 0 }),
+      f({ foo: 1, bar: 1, quux: 10 }),
+      f({ foo: 2, bar: 2, quux: 9 })]);
+
+    expect(events).toEqual([
+      'raised foo',
+      'raised bar',
+      'changed foo',
+      'raised quux',
+      'changed bar',
+      'changed foo',
+      'changed quux']);
+    done();
+  });
+
   it('correctly executes the README example', async function(done) {
     const f = observeDiffs({ changed: (_key,prev,next) => {
       return next - prev;
