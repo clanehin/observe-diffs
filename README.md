@@ -28,6 +28,12 @@ the input.
 Tests whether or not two values are considered equal. By default, this is equivalent
 to Object.is().
 
+### keys
+
+Returns a list of keys in the input object. This can be used to fix an ordering
+over the keys, so that raised and updated (but not dropped) events will fire
+in a specific order. It can also filter the input.
+
 Usage
 -----
 

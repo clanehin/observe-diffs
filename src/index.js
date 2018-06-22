@@ -14,10 +14,12 @@ module.exports = function(params) {
 
   const update = async function(input) {
     const ins = await input;
+    const visible_keys = {};
     const join = [];
 
     // handle new and existing inputs
     for( const k of await params.keys(ins) ) {
+      visible_keys[k] = true;
       await start(params.concurrency, join, async () => {
         let out = undefined;
 
@@ -37,7 +39,7 @@ module.exports = function(params) {
 
     // handle dropped inputs
     for( const k in state ) {
-      if( !(k in ins) ) {
+      if( !(k in visible_keys) ) {
         await start(params.concurrency, join, async () => {
           await params.dropped(k, state[k], undefined, outs[k]);
           delete state[k];
